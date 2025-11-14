@@ -14,7 +14,7 @@ __global__ void Relu(float *input, float *output, int N){
         else{
             output[threadId] = 0;
         }
-        }
+    }
 
 }
 
