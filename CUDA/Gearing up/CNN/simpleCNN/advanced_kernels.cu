@@ -62,9 +62,7 @@ __global__ void layernorm_forward_kernel(
     
     int tid = threadIdx.x;
     
-    // ========================================================================
     // STEP 1: Calculate Mean (μ)
-    // ========================================================================
     // Each thread accumulates a portion of the sum
     float local_sum = 0.0f;
     for (int i = tid; i < num_features; i += blockDim.x) {
@@ -92,9 +90,7 @@ __global__ void layernorm_forward_kernel(
     __syncthreads();
     mean = shared_sum[0]; // All threads read the mean
     
-    // ========================================================================
     // STEP 2: Calculate Variance (σ²)
-    // ========================================================================
     // Variance = E[(x - μ)²]
     float local_sq_sum = 0.0f;
     for (int i = tid; i < num_features; i += blockDim.x) {
@@ -122,9 +118,7 @@ __global__ void layernorm_forward_kernel(
     __syncthreads();
     variance = shared_sq_sum[0]; // All threads read variance
     
-    // ========================================================================
     // STEP 3: Normalize and Apply Affine Transformation
-    // ========================================================================
     // y = γ * (x - μ) / √(σ² + ε) + β
     float inv_std = rsqrtf(variance + eps); // 1/√(σ² + ε)
     
@@ -344,9 +338,6 @@ __global__ void focal_loss_kernel(
     //   focal_weight ≈ 1, so loss ≈ -log(p_t) (hard example, focus on it)
 }
 
-// ============================================================================
-// LABEL SMOOTHING CROSS ENTROPY
-// ============================================================================
 // Label smoothing is a regularization technique that prevents the model from
 // becoming overconfident. Instead of using hard labels (0 or 1), we smooth
 // them to encourage the model to be less certain.
@@ -378,7 +369,6 @@ __global__ void focal_loss_kernel(
 // 4. Acts as regularization (similar to adding noise to labels)
 //
 // This kernel computes label-smoothed cross entropy
-// ============================================================================
 
 __global__ void label_smoothing_cross_entropy_kernel(
     const float* predictions,  // Predicted probabilities [N, num_classes]
@@ -423,9 +413,8 @@ __global__ void label_smoothing_cross_entropy_kernel(
     //                         maintain reasonable probabilities everywhere
 }
 
-// ============================================================================
-// HELPER: Initialize gamma and beta for LayerNorm
-// ============================================================================
+// Initialize gamma and beta for LayerNorm
+
 // LayerNorm requires learnable parameters gamma (scale) and beta (shift).
 // Standard initialization:
 //   gamma = 1.0 (no scaling initially)
@@ -433,7 +422,6 @@ __global__ void label_smoothing_cross_entropy_kernel(
 //
 // During training, these parameters will be learned to optimally scale and
 // shift the normalized features for each channel.
-// ============================================================================
 
 __global__ void init_layernorm_params_kernel(
     float* gamma,       // Scale parameters [C]
@@ -448,9 +436,7 @@ __global__ void init_layernorm_params_kernel(
     beta[c] = 0.0f;   // Initialize to 0 (no shift)
 }
 
-// ============================================================================
 // UTILITY: Softmax (for comparison with custom losses)
-// ============================================================================
 // Standard softmax implementation for converting logits to probabilities.
 // This is used as preprocessing for both Focal Loss and Label Smoothing CE.
 //
@@ -460,7 +446,6 @@ __global__ void init_layernorm_params_kernel(
 // p_i = exp(x_i - max(x)) / Σ exp(x_j - max(x))
 //
 // Subtracting max(x) prevents overflow from large exponentials
-// ============================================================================
 
 __global__ void softmax_kernel(
     const float* input,     // Input logits [N, num_classes]

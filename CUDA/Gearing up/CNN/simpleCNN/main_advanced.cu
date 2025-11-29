@@ -1,6 +1,4 @@
-// ============================================================================
-// MAIN_ADVANCED.CU - CNN WITH ADVANCED COMPONENTS & KERNEL FUSION
-// ============================================================================
+// main_advanced.cu - CNN with advanced components and Kernel fusion
 // This is the main entry point for testing:
 // 1. Non-fused implementations (baseline)
 // 2. Four different kernel fusion techniques
@@ -22,7 +20,6 @@
 // USAGE:
 // ./mnist_advanced [mode]
 // where mode = 0 (non-fused), 1 (V1), 2 (V2), 3 (V3), 4 (V4), 5 (compare all)
-// ============================================================================
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,11 +33,8 @@
 #include "fused_kernels.cu"     // Fused kernel implementations
 #include "profiling_utils.cu"   // Performance measurement utilities
 
-// ============================================================================
-// GLOBAL CONFIGURATION
-// ============================================================================
+// Global Configuration
 // These parameters define our CNN architecture and training setup
-// ============================================================================
 
 // Architecture hyperparameters
 #define NUM_CLASSES 10          // MNIST has 10 digits (0-9)
@@ -81,11 +75,8 @@
 // Label smoothing parameter
 #define LABEL_SMOOTHING 0.1f
 
-// ============================================================================
-// MODEL PARAMETERS STRUCTURE
-// ============================================================================
+// Model Parameters Structure
 // This structure holds all learnable parameters for the model
-// ============================================================================
 
 typedef struct {
     // Convolution layer
@@ -114,20 +105,14 @@ typedef struct {
     
 } ModelParams;
 
-// ============================================================================
-// FORWARD PASS IMPLEMENTATIONS
-// ============================================================================
+// Forward Pass Implementations
 // Different forward pass implementations for each fusion mode
-// ============================================================================
 
-// ----------------------------------------------------------------------------
 // MODE 0: NON-FUSED (BASELINE)
-// ----------------------------------------------------------------------------
 // This is our baseline implementation where each operation is a separate kernel
 // Conv → GELU → LayerNorm → MaxPool → FC
 //
 // This gives us the reference accuracy and baseline performance
-// ----------------------------------------------------------------------------
 
 void forward_pass_non_fused(
     ModelParams* model,
@@ -140,9 +125,7 @@ void forward_pass_non_fused(
     int conv_out_size = batch_size * NUM_CONV_FILTERS * CONV_OUT_H * CONV_OUT_W;
     int pool_out_size = batch_size * NUM_CONV_FILTERS * POOL_OUT_H * POOL_OUT_W;
     
-    // ========================================================================
     // STEP 1: Convolution
-    // ========================================================================
     int conv_blocks = (conv_out_size + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     
     CudaTimer timer;
@@ -179,9 +162,7 @@ void forward_pass_non_fused(
     
     cudaDeviceSynchronize();
     
-    // ========================================================================
     // STEP 2: GELU Activation
-    // ========================================================================
     timer.start();
     gelu_activation_kernel<<<conv_blocks, THREADS_PER_BLOCK>>>(
         model->d_conv_out,
@@ -202,9 +183,7 @@ void forward_pass_non_fused(
     
     cudaDeviceSynchronize();
     
-    // ========================================================================
     // STEP 3: Layer Normalization
-    // ========================================================================
     int ln_blocks = batch_size;  // One block per sample
     int shared_mem_size = 2 * THREADS_PER_BLOCK * sizeof(float);
     
@@ -235,9 +214,7 @@ void forward_pass_non_fused(
     
     cudaDeviceSynchronize();
     
-    // ========================================================================
     // STEP 4: MaxPool 2x2
-    // ========================================================================
     int pool_blocks = (pool_out_size + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     
     timer.start();
@@ -265,16 +242,12 @@ void forward_pass_non_fused(
     
     cudaDeviceSynchronize();
     
-    // ========================================================================
     // STEP 5: Flatten (implicit - just pointer manipulation)
-    // ========================================================================
     CHECK_CUDA(cudaMemcpy(model->d_fc_in, model->d_pooled, 
                          pool_out_size * sizeof(float), 
                          cudaMemcpyDeviceToDevice));
     
-    // ========================================================================
     // STEP 6: Fully Connected Layer
-    // ========================================================================
     int fc_out_size = batch_size * NUM_CLASSES;
     int fc_blocks = (fc_out_size + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     
@@ -306,15 +279,12 @@ void forward_pass_non_fused(
 
 
 
-// ----------------------------------------------------------------------------
 // MODE 1: FUSED V1 (GELU + LAYERNORM)
-// ----------------------------------------------------------------------------
 // Combines GELU activation and LayerNorm into a single kernel
 // Conv → [GELU+LayerNorm] → MaxPool → FC
 //
 // Expected benefit: ~1.5x speedup on activation+normalization stage
 // Memory savings: 1 global write + 1 global read eliminated
-// ----------------------------------------------------------------------------
 
 void forward_pass_fused_v1(
     ModelParams* model,
@@ -328,10 +298,8 @@ void forward_pass_fused_v1(
     int pool_out_size = batch_size * NUM_CONV_FILTERS * POOL_OUT_H * POOL_OUT_W;
     
     CudaTimer timer;
-    
-    // ========================================================================
+
     // STEP 1: Convolution (same as non-fused)
-    // ========================================================================
     int conv_blocks = (conv_out_size + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     
     timer.start();
@@ -353,9 +321,7 @@ void forward_pass_fused_v1(
     
     cudaDeviceSynchronize();
     
-    // ========================================================================
     // STEP 2: FUSED GELU + LayerNorm
-    // ========================================================================
     int fused_blocks = batch_size;
     int shared_mem_size = 2 * THREADS_PER_BLOCK * sizeof(float);
     
@@ -385,9 +351,7 @@ void forward_pass_fused_v1(
     
     cudaDeviceSynchronize();
     
-    // ========================================================================
     // STEP 3-5: MaxPool, Flatten, FC (same as non-fused)
-    // ========================================================================
     int pool_blocks = (pool_out_size + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     maxpool2x2_kernel<<<pool_blocks, THREADS_PER_BLOCK>>>(
         model->d_normalized, model->d_pooled,
@@ -408,15 +372,12 @@ void forward_pass_fused_v1(
     cudaDeviceSynchronize();
 }
 
-// ----------------------------------------------------------------------------
 // MODE 2: FUSED V2 (EVONORM-B0)
-// ----------------------------------------------------------------------------
 // Uses EvoNorm-B0 instead of separate activation + normalization
 // Conv → [EvoNorm-B0] → MaxPool → FC
 //
 // This is a novel normalization-activation layer from neural architecture search
 // No explicit activation function!
-// ----------------------------------------------------------------------------
 
 void forward_pass_fused_v2(
     ModelParams* model,
@@ -430,10 +391,8 @@ void forward_pass_fused_v2(
     int pool_out_size = batch_size * NUM_CONV_FILTERS * POOL_OUT_H * POOL_OUT_W;
     
     CudaTimer timer;
-    
-    // ========================================================================
+
     // STEP 1: Convolution
-    // ========================================================================
     int conv_blocks = (conv_out_size + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     
     timer.start();
@@ -455,9 +414,7 @@ void forward_pass_fused_v2(
     
     cudaDeviceSynchronize();
     
-    // ========================================================================
     // STEP 2: EvoNorm-B0
-    // ========================================================================
     int evonorm_total = batch_size * NUM_CONV_FILTERS;
     int evonorm_blocks = (evonorm_total + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     
@@ -485,9 +442,7 @@ void forward_pass_fused_v2(
     
     cudaDeviceSynchronize();
     
-    // ========================================================================
     // STEP 3-5: MaxPool, Flatten, FC
-    // ========================================================================
     int pool_blocks = (pool_out_size + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     maxpool2x2_kernel<<<pool_blocks, THREADS_PER_BLOCK>>>(
         model->d_normalized, model->d_pooled,
@@ -508,12 +463,9 @@ void forward_pass_fused_v2(
     cudaDeviceSynchronize();
 }
 
-// ----------------------------------------------------------------------------
 // MODE 3: FUSED V3 (SWISH + LAYERNORM)
-// ----------------------------------------------------------------------------
 // Similar to V1 but uses Swish activation instead of GELU
 // Conv → [Swish+LayerNorm] → MaxPool → FC
-// ----------------------------------------------------------------------------
 
 void forward_pass_fused_v3(
     ModelParams* model,
@@ -528,9 +480,7 @@ void forward_pass_fused_v3(
     
     CudaTimer timer;
     
-    // ========================================================================
     // STEP 1: Convolution
-    // ========================================================================
     int conv_blocks = (conv_out_size + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     
     timer.start();
@@ -551,10 +501,8 @@ void forward_pass_fused_v3(
     stats_array[(*stats_idx)++] = conv_stats;
     
     cudaDeviceSynchronize();
-    
-    // ========================================================================
+
     // STEP 2: FUSED SWISH + LayerNorm
-    // ========================================================================
     int fused_blocks = batch_size;
     int shared_mem_size = 2 * THREADS_PER_BLOCK * sizeof(float);
     
@@ -583,9 +531,7 @@ void forward_pass_fused_v3(
     
     cudaDeviceSynchronize();
     
-    // ========================================================================
     // STEP 3-5: MaxPool, Flatten, FC
-    // ========================================================================
     int pool_blocks = (pool_out_size + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     maxpool2x2_kernel<<<pool_blocks, THREADS_PER_BLOCK>>>(
         model->d_normalized, model->d_pooled,
@@ -606,11 +552,7 @@ void forward_pass_fused_v3(
     cudaDeviceSynchronize();
 }
 
-
-
-// ============================================================================
 // INITIALIZATION AND MEMORY MANAGEMENT
-// ============================================================================
 
 ModelParams* allocate_model() {
     ModelParams* model = (ModelParams*)malloc(sizeof(ModelParams));
@@ -693,9 +635,7 @@ void free_model(ModelParams* model) {
     free(model);
 }
 
-// ============================================================================
 // MAIN FUNCTION
-// ============================================================================
 
 int main(int argc, char** argv) {
     // Parse command line arguments

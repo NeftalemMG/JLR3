@@ -1,6 +1,5 @@
-// ============================================================================
 // PROFILING UTILITIES
-// ============================================================================
+
 // This file provides utilities for measuring and comparing performance of
 // CUDA kernels, specifically for comparing non-fused vs fused implementations.
 //
@@ -16,15 +15,13 @@
 // 3. Launch your kernel
 // 4. Stop timing with stop_timer()
 // 5. Print results with print_kernel_stats()
-// ============================================================================
+
 
 #include <cuda_runtime.h>
 #include <stdio.h>
 #include <sys/time.h>
 
-// ============================================================================
 // CUDA EVENT-BASED TIMER
-// ============================================================================
 // CUDA events provide accurate GPU timing by recording timestamps directly
 // on the GPU timeline. This is more accurate than CPU-based timing because:
 // 1. No CPU-GPU synchronization overhead
@@ -35,7 +32,6 @@
 // - cudaEventRecord() inserts a timestamp into the GPU's command queue
 // - cudaEventElapsedTime() computes the difference between two timestamps
 // - cudaEventSynchronize() blocks CPU until GPU reaches that point
-// ============================================================================
 
 class CudaTimer {
 private:
@@ -98,16 +94,13 @@ public:
     }
 };
 
-// ============================================================================
 // CPU TIMER (for end-to-end timing including kernel launches)
-// ============================================================================
 // Sometimes we want to measure total time including:
 // - Kernel launch overhead
 // - Memory transfers
 // - CPU-GPU synchronization
 //
 // For this, we use CPU-side timing with gettimeofday()
-// ============================================================================
 
 class CPUTimer {
 private:
@@ -140,11 +133,8 @@ public:
     }
 };
 
-// ============================================================================
 // KERNEL STATISTICS STRUCTURE
-// ============================================================================
 // This structure holds all the metrics we want to track for a kernel
-// ============================================================================
 
 struct KernelStats {
     const char* kernel_name;        // Name of the kernel
@@ -207,11 +197,8 @@ struct KernelStats {
     }
 };
 
-// ============================================================================
 // PROFILER CLASS
-// ============================================================================
 // High-level interface for profiling kernels
-// ============================================================================
 
 class KernelProfiler {
 private:
@@ -286,11 +273,8 @@ public:
     }
 };
 
-// ============================================================================
 // COMPARISON UTILITIES
-// ============================================================================
 // Functions to compare non-fused vs fused implementations
-// ============================================================================
 
 // Compare two kernel implementations and print speedup
 void compare_kernels(const KernelStats& baseline, const KernelStats& optimized) {
@@ -350,11 +334,8 @@ void print_comparison_table(KernelStats* stats, int num_kernels) {
     printf("=================================================================================\n");
 }
 
-// ============================================================================
 // TENSOR SHAPE IMPACT ANALYSIS
-// ============================================================================
 // Study how tensor dimensions affect kernel performance
-// ============================================================================
 
 void analyze_shape_impact(
     void (*kernel_func)(int, int, int, int),  // Kernel that takes N, C, H, W
@@ -403,9 +384,7 @@ void analyze_shape_impact(
     printf("========================================\n");
 }
 
-// ============================================================================
 // UTILITY: Check CUDA errors
-// ============================================================================
 #define CHECK_CUDA(call) \
     do { \
         cudaError_t err = call; \
@@ -416,9 +395,7 @@ void analyze_shape_impact(
         } \
     } while(0)
 
-// ============================================================================
 // UTILITY: Print GPU device properties
-// ============================================================================
 void print_device_info() {
     int device;
     cudaGetDevice(&device);
@@ -445,7 +422,3 @@ void print_device_info() {
            2.0f * prop.memoryClockRate * (prop.memoryBusWidth / 8) / 1e6f);
     printf("========================================\n");
 }
-
-// ============================================================================
-// END OF PROFILING_UTILS.CU
-// ============================================================================
