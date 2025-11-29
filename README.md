@@ -140,11 +140,16 @@ MNIST handwritten digit dataset:
 ## Results
 
 ### Profiling Results
+#### CUDA Profiling Results Summary
 ![CUDA Profiling Results Summary](screenshots/CUDA_Profiling_Results_Summary.png)
+#### CUDA nvprof Profiling Results Summary
 ![CUDA nvprof Profiling Results Summary](screenshots/CUDA_nvprof_profiling_results_summary.png)
+#### Triton Profiling Results Summary
 ![Triton Profiling Results Summary](screenshots/Triton_profiling_results_summary.png)
 
 ### Training Results
+#### CUDA Training Results Summary
 ![CUDA Training Results Summary](screenshots/CUDA_Training_Results_Summary.png)
-![Triton Training Rresults Summary](screenshots/Triton_training_results_summary.png)
+#### Triton Training Results Summary
+![Triton Training Results Summary](screenshots/Triton_training_results_summary.png)
 
