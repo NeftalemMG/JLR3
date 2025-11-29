@@ -137,16 +137,14 @@ MNIST handwritten digit dataset:
 - Triton (for Triton implementation)
 - PyTorch (for reference implementation)
 
-
-```markdown
 ## Results
 
 ### Profiling Results
 ![CUDA Profiling Results Summary](screenshots/CUDA_Profiling_Results_Summary.png)
 ![CUDA nvprof Profiling Results Summary](screenshots/CUDA_nvprof_profiling_results_summary.png)
-![Triton_profiling_results_summary.png](screenshots/Triton_profiling_results_summary.png)
+![Triton Profiling Results Summary](screenshots/Triton_profiling_results_summary.png)
 
 ### Training Results
-![CUDA Training Results Sumary.png](screenshots/CUDA_Training_Results_Sumary.png)
+![CUDA Training Results Summary](screenshots/CUDA_Training_Results_Summary.png)
 ![Triton Training Rresults Summary](screenshots/Triton_training_results_summary.png)
-```
+
