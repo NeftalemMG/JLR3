@@ -1,10 +1,11 @@
-**#ifndef, #define, #endif** => This is called an **include guard** and it prevents code from being included multiple times. 
+**<mark>#ifndef, #define, #endif**<mark> => This is called an **include guard** and it prevents code from being included multiple times. 
 
 So we are just basically saying that if a certain code block has not been defined yet, (ifndef), then define it now (define), and after finishing up, you close it (endif). 
 
 **fread** => this is a binary input function that reads raw bytes from a file into memory. This is its function signature:  
-  
+```cpp
 size_t fread(void *ptr, size_t size, size_t count, FILE *stream);
+```
   
 ```
 The parameters: 1) ptr: pointer to where the data will be stored in memory
@@ -21,7 +22,9 @@ Before the compiler even sees our C code, the preprocessor reads our file, appli
 
 Macros basically are "Find this text and replace it with that text."  
   
-Ex: #define PI 3.14159.
+```cpp
+#define PI 3.14159.
+```
 
 This means that every time we see PI, it will be replaced with 3.14159. 
 

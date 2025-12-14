@@ -59,45 +59,45 @@ public:
 This guarantees that events are created and destroyed only once, and clean up is not forgotten.
 
 How RAII behaves in real code:
-```
-Ex: void run() {
-        CudaTimer timer;  // constructor runs here
-        timer.start();
+```cpp
+void run() {
+    CudaTimer timer;  // constructor runs here
+    timer.start();
 
-        if (error) return;  // destructor STILL runs
+    if (error) return;  // destructor STILL runs
 
-        timer.stop();
-    }  // destructor runs here too
+    timer.stop();
+}  // destructor runs here too
 ```
 
 This ensures that there are no leaks, no special cleanup logic, and no goto cleanup hacks (referring to C here).
 
 **Constructors** => A constructor is a special function that runs automatically when an object is created. Its job is to set the object up so it starts life in a valid state. We never call it ourselves. 
-```
-Ex: class Person {
-    public:
-        int age;
+```cpp
+class Person {
+public:
+    int age;
 
-        Person() {
-            age = 0;
-        }
-    };
+    Person() {
+        age = 0;
+    }
+};
 ```
 usage: Person p; //constructor runs here
 
 After creation, p.age == 0
 
 **Destructors** => A destructor is a special function that runs automatically when an object is destroyed. Its job is to clean up resources before the object dies. Again, we never call it ourselves. 
-```
-Ex: class Person {
-    public:
-        ~Person() {
-            printf("Person destroyed\n");
-        }
-    };
+```cpp
+class Person {
+public:
+    ~Person() {
+        printf("Person destroyed\n");
+    }
+};
 ```
 When does it run?
-```
+```cpp
 {
     Person p;
 }   // destructor runs here
@@ -105,12 +105,12 @@ When does it run?
 Syntax:
 Constructor	ClassName(...)
 Destructor	~ClassName()
-```
-Ex: class A {
-    public:
-        A() {}      // constructor
-        ~A() {}     // destructor
-    };
+```cpp
+class A {
+public:
+    A() {}      // constructor
+    ~A() {}     // destructor
+};
 ```
 Without destructors, there is no clean up, and as a result, memory leaks. 
 
