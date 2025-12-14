@@ -1,4 +1,4 @@
-**<mark>#ifndef, #define, #endif**<mark> => This is called an **include guard** and it prevents code from being included multiple times. 
+<mark>#ifndef, #define, #endif</mark> => This is called an **include guard** and it prevents code from being included multiple times. 
 
 So we are just basically saying that if a certain code block has not been defined yet, (ifndef), then define it now (define), and after finishing up, you close it (endif). 
 
