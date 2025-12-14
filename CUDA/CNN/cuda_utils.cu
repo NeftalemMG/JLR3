@@ -10,9 +10,11 @@
 #define CHECK_CUDA(call) \
     do { \
         cudaError_t error = call; \
+        // cudaError_t is an error code type (0 = success, anything else = error)
         if (error != cudaSuccess) { \
-            printf("CUDA error at %s:%d - %s\n", __FILE__, __LINE__, \
-                   cudaGetErrorString(error)); \
+        // CudaSuccess is a constant that equals 0 (meaning no error)
+            printf("CUDA error at %s:%d - %s\n.", __FILE__, __LINE__, cudaGetErrorString(error)); \
+            // Example of an error message: CUDA error at model.cu:42 - out of memory.
             exit(1); \
         } \
     } while(0)
