@@ -2,28 +2,32 @@
 
 So we are just basically saying that if a certain code block has not been defined yet, (ifndef), then define it now (define), and after finishing up, you close it (endif). 
 
-**fread** => this is a binary input function that reads raw bytes from a file into memory. This is its function signature:
-
+**fread** => this is a binary input function that reads raw bytes from a file into memory. This is its function signature:  
+  
 size_t fread(void *ptr, size_t size, size_t count, FILE *stream);
-
+  
+```
 The parameters: 1) ptr: pointer to where the data will be stored in memory
                 2) size: size in bytes of one item
                 3) count: number of items to read
                 4) stream: pointer to the file we are going to be reading from. The file must be opened in binary form ("rb")
                 Ex: File *f = fopen("whateverYourFileNameIs.bin", "rb");
+```
 
 
-**macros** => macros in c are not functions or not code that run - they simply are just text substitution rule handled by the preprocessor. 
+**macros** => macros in c are not functions or not code that run - they simply are just text substitution rule handled by the preprocessor.  
+  
+Before the compiler even sees our C code, the preprocessor reads our file, applies macros, produces a new expanded source file and then that gets compiled.  
 
-Before the compiler even sees our C code, the preprocessor reads our file, applies macros, produces a new expanded source file and then that gets compiled. 
+Macros basically are "Find this text and replace it with that text."  
+  
+Ex: #define PI 3.14159. 
+This means that every time we see PI, it will be replaced with 3.14159. 
 
-Macros basically are "Find this text and replace it with that text."
-
-Ex: #define PI 3.14159
-This means that every time we see PI, it will be replaced with 3.14159
-
+```
 Macros with arguments (function-like macros) => Ex: #define SQUARE(x) ((x) * (x)) 
                                                     int a = SQUARE(1)
+
 
 However, just keep in mind that macros can be scary because 1) They ignore types
                                                             2) Ignore Scopes
@@ -87,3 +91,4 @@ else
 
 And Boom, we have a syntax and a logic error:
 In our case, else will bind to the wron if and the macro has expanded into multiple statements. C has no idea what you mean, hence the errors. 
+```
