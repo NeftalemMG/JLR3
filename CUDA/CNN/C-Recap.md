@@ -21,7 +21,8 @@ Before the compiler even sees our C code, the preprocessor reads our file, appli
 
 Macros basically are "Find this text and replace it with that text."  
   
-Ex: #define PI 3.14159. 
+Ex: #define PI 3.14159.
+
 This means that every time we see PI, it will be replaced with 3.14159. 
 
 ```
@@ -33,10 +34,10 @@ However, just keep in mind that macros can be scary because 1) They ignore types
                                                             2) Ignore Scopes
                                                             3) Can evaluate arguments multiple times
                                                             4) Not debuggable
-
+```
 But why even use macros at all?
 It is because they can do things that functions cannot:
-
+```
 1) Compile time constraints. Ex: #define IMG_H 28
                                  #define IMG_W 28
 There is no runtime or memory cost. 
@@ -60,11 +61,11 @@ Used as:
 FOR_EACH_PIXEL(i, N) {
     out[i] = ...
 }
-
+```
 **do { ... } while (0)** => This pattern creates a single statement with its own scope and executes only once. 
 
 To understand the need for this pattern, lets see an example where an error occurs because the pattern was not applied:
-
+```
 Lets imagine this macro:
 #define CHECK_CUDA(call) \
     cudaError_t error = call; \
@@ -88,7 +89,7 @@ if (error != cudaSuccess) {
 }
 else
     cleanup();
-
-And Boom, we have a syntax and a logic error:
-In our case, else will bind to the wron if and the macro has expanded into multiple statements. C has no idea what you mean, hence the errors. 
 ```
+And Boom, we have a syntax and a logic error:
+
+In our case, else will bind to the wron if and the macro has expanded into multiple statements. C has no idea what you mean, hence the errors. 
